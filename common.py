@@ -1,7 +1,7 @@
 
 def hsl_to_rgb(h: float, s: float, l: float) -> (int, int, int):
     """
-    Hue [0,360), S [0,1] V [0,1]
+    Hue [0,1), S [0,1] V [0,1]
 
     Reference https://en.wikipedia.org/wiki/HSL_and_HSV#From_HSL
     """

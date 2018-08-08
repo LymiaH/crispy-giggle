@@ -11,9 +11,9 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
 
     output = np.zeros([R, C, 3]).astype(np.uint8)
     for i in range(retval - 1):
-        fill = hsl_to_rgb(360 * i / retval, 1, 0.5)
+        (r, g, b) = hsl_to_rgb(float(i) / (retval - 1), 1.0, 0.5)
         mask = labels == i + 1
-        output[mask] = fill
+        output[mask] = (b, g, r)
 
     data["img"] = output
     return img, True
