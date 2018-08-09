@@ -5,18 +5,18 @@ from itertools import chain
 import cv2
 import numpy as np
 
-def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict[str, Any]) -> (np.ndarray, bool):
-    VORONOI = -2
-    TOP = -3
-    BOTTOM = -4
-    LEFT = -5
-    RIGHT = -6
+VORONOI = -2
+TOP = -3
+BOTTOM = -4
+LEFT = -5
+RIGHT = -6
 
+def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict[str, Any]) -> (np.ndarray, bool):
     if len(img.shape) == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     R, C = img.shape
     neighbours: Callable[[int, int, int, int], Iterator[Tuple[int, int]]] = global_data["neighbours"]
-    retval, labels, stats, centroids = global_data["connected"]
+    retval, labels, stats, centroids = global_data["connected"]["connected"]
     if iteration == 0:
         # wavefront: List[Tuple[int, int]] = []
         # it = np.nditer(labels, op_flags=['readonly'], flags=['multi_index'])
@@ -87,11 +87,12 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
         # Now we want to update the groups, if any of the group expansions intersect with another group's expansion, then it becomes a voronoi point
         # TODO think about the case where two of them touch but don't intersect yet... So touching at the same time
 
+
         # Find the new Voronoi points
         vori = np.zeros(img.shape, np.uint8)
-        vori[new_groups != 0] = 255
-        vori[groups != 0] = 0
-        vori[mask == 0] = 0
+        # vori[new_groups != 0] = 255
+        # vori[groups != 0] = 0
+        # vori[mask == 0] = 0
 
         # Excude them from the mask
         mask[vori > 0] = 0
@@ -126,12 +127,6 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
         output[mask > 0] = (b, g, r)
 
     data["img"] = output
-
-    # Output the voronoi points
-    mask = np.zeros([R, C], np.uint8)
-    mask[groups == VORONOI] = 255
-    waypoints = cv2.findNonZero(mask)
-    data["waypoints"] = waypoints
 
     # Check for completion
     mask = np.zeros([R, C], np.uint8)

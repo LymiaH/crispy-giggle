@@ -104,8 +104,11 @@ if __name__ == '__main__':
         f: func_filter = filt[1]
         i: int = 0
         data: Dict[str, Any] = {}
+        data["input"] = np.copy(img)
         while True:
             img, finished = f(i, img, data, global_data)
+            data["output"] = np.copy(img)
+            global_data[filt[0]] = data
             if "img" in data:
                 cv2.imshow(name, data["img"])
             else:

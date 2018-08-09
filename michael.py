@@ -4,7 +4,13 @@ import cv2
 import numpy as np
 
 def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict[str, Any]) -> (np.ndarray, bool):
-    retval, labels, stats, centroids = global_data["connected"]
+    retval, labels, stats, centroids = global_data["connected"]["connected"]
+    original = img
+
+    if "canny" in global_data:
+        original = global_data["canny"]["input"]
+
+    img = np.copy(img)
 
     if len(img.shape) == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -15,6 +21,7 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
         mask[labels == group_id] = 255
         groups[group_id] = cv2.findNonZero(mask)
 
+    midpoints = []
     for group_id, group in groups.items():
         other_groups: np.ndarray = None
         for other_group_id, other_group in groups.items():
@@ -36,5 +43,9 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
             if midpoint == (nearest_inner_pixel[0][0], nearest_inner_pixel[0][1]):
                 continue
             cv2.circle(img, midpoint, 3, [0, 0, 255], -1)
+            midpoints.append(midpoint)
 
-    return img, True
+    data["midpoints"] = midpoints
+    data["img"] = img
+    global_data["michael"] = data
+    return original, True
