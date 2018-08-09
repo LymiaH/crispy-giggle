@@ -4,5 +4,8 @@ __pycache__/
 *.pyc
 /images/
 /build/
+
+# cython
 *.pyd
-/*.c
+*.so
+*.c

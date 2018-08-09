@@ -2,6 +2,7 @@ from common import hsl_to_rgb
 from typing import Any, Callable, Dict, Iterator, List, Set, Tuple
 from itertools import chain
 from brushfire import VORONOI
+from cython_functions import some_filter
 
 import cv2
 import math
@@ -87,30 +88,30 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
     road_mask[img > 0] = 255
 
     if iteration == 0:
-        original_points = []
+        point_mask = np.zeros(img.shape[0:2], np.uint8)
         # Load data
         if "afterbrush" in global_data:
-            ppp = cv2.findNonZero(global_data["afterbrush"]["img"])
-            if ppp is not None:
-                for i in range(0, ppp.shape[0]):
-                    (r, c) = ppp[i, 0, 0:2]
-                    original_points.append((r, c))
+            point_mask[global_data["afterbrush"]["img"] != 0] = 255
         elif "brushfire" in global_data:
             groups = global_data["brushfire"]["groups"]
-            mask = np.zeros(img.shape[0:2], np.uint8)
-            mask[groups == VORONOI] = 255
-            voronoi = cv2.findNonZero(mask)
-            if voronoi is not None:
-                for i in range(0, voronoi.shape[0]):
-                    (r, c) = voronoi[i, 0, 0:2]
-                    original_points.append((r, c))
-            else:
-                print("Brushfire found no points!")
+            point_mask[groups == VORONOI] = 255
         elif "michael" in global_data:
             for point in global_data["michael"]["midpoints"]:
-                original_points.append(point)
+                point_mask[point[0], point[1]] = 255
         else:
             print("No waypoint data present.")
+
+        point_mask = some_filter(point_mask)
+
+        original_points = []
+        ppp = cv2.findNonZero(point_mask)
+        if ppp is not None:
+            for i in range(0, ppp.shape[0]):
+                (r, c) = ppp[i, 0, 0:2]
+                original_points.append((r, c))
+        else:
+            print("No points found?")
+
         data["original_points"] = original_points
 
         points: Set[int] = set()
