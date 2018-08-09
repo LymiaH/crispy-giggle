@@ -17,7 +17,7 @@ def some_filter(np.ndarray[DTYPE_t, ndim=2] source):
     #cdef np.ndarray[DTYPE_t, ndim=2] h = np.zeros([R, C], dtype=DTYPE)
 
     cdef int r, c, r_min, r_max, c_min, c_max, rr, cc
-    cdef int count, count_cardinal, count_diagonal, count_ns, count_we
+    cdef int count, count_cardinal, count_diagonal, count_ns, count_we, count_clear_diag
 
     for r in range(R):
         r_min = max(0, r - 1)
@@ -30,6 +30,7 @@ def some_filter(np.ndarray[DTYPE_t, ndim=2] source):
             count_diagonal = 0
             count_ns = 0
             count_we = 0
+            count_clear_diag = 0
             for rr in range(r_min, r_max):
                 for cc in range(c_min, c_max):
                     if source[rr, cc] > 0:
@@ -42,12 +43,19 @@ def some_filter(np.ndarray[DTYPE_t, ndim=2] source):
                             count_we += 1
                         if (cc - c) == 0:
                             count_ns += 1
+                        if (rr - r) != 0 and (cc - c) != 0: # On a diagonal
+                            # Check if the diagonal depends on it
+                            if source[r, cc] == 0 and source[rr, c] == 0:
+                                count_clear_diag += 1
+
             
             # if source[r, c] > 0 and (count > 3 or (count_we == 2 and count_ns == 2)):
             if source[r, c] > 0 and (
-                (count_we == 2 and count_ns == 2) # L shape
-                or (count_we == 3 and count_ns == 2) # T shape
-                or (count_we == 2 and count_ns == 3) # T shape
+                    (count_we == 2 and count_ns == 2) # L shape
+                    or (count_we == 3 and count_ns == 2) # T shape
+                    or (count_we == 2 and count_ns == 3) # T shape
+                ) and (
+                    count_clear_diag == 0 # Would break connection to diagonal
                 ):
                 #h[r, c] = 0
                 source[r, c] = 0
