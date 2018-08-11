@@ -14,7 +14,7 @@ def can_see_cached(mask: np.ndarray, positions: Dict[int, Tuple[int, int]], line
     ref = frozenset([a, b])
     if ref in line_of_sight:
         return line_of_sight[ref]
-    see: bool = can_see(mask, positions[a], positions[b])
+    see = can_see(mask, positions[a], positions[b])
     line_of_sight[ref] = see
     return see
 
