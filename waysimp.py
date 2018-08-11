@@ -100,7 +100,7 @@ def remove_edge(edges: Dict[int, Set[int]], dists: Dict[FrozenSet[int], float], 
     dists.pop(ref, None)
 
 def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict[str, Any]) -> (np.ndarray, bool):
-    neighbours: Callable[[int, int, int, int], Iterator[Tuple[int, int]]] = global_data["neighbours"]
+    neighbours = global_data["neighbours"] # type: Callable[[int, int, int, int], Iterator[Tuple[int, int]]]
     if len(img.shape) == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     R, C = img.shape
@@ -134,13 +134,13 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
 
         data["original_points"] = original_points
 
-        points: Set[int] = set()
-        positions: Dict[int, Tuple[int, int]] = {}
-        positions_reverse: Dict[Tuple(int, int), int] = {}
-        edges: Dict[int, Set[int]] = {}
-        dists: Dict[FrozenSet[int], float] = {}
+        points = set() # type: Set[int]
+        positions = {} # type: Dict[int, Tuple[int, int]]
+        positions_reverse = {} # type: Dict[Tuple(int, int), int]
+        edges = {} # type: Dict[int, Set[int]]
+        dists = {} # type: Dict[FrozenSet[int], float]
         N = len(original_points)
-        line_of_sight: Dict[FrozenSet[int], float] = {}
+        line_of_sight = {} # type: Dict[FrozenSet[int], float]
 
         # Init positions
         for curr in range(N):
@@ -169,12 +169,12 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
         data["N"] = N
         data["line_of_sight"] = line_of_sight
 
-    points: Set[int] = data["points"]
-    positions: Dict[int, Tuple[int, int]] = data["positions"]
-    positions_reverse: Dict[Tuple[int, int], int] = data["positions_reverse"]
-    edges: Dict[int, Set[int]] = data["edges"]
-    dists: Dict[FrozenSet[int], float] = data["dists"]
-    line_of_sight: Dict[FrozenSet[int], float] = data["line_of_sight"]
+    points = data["points"] # type: Set[int]
+    positions = data["positions"] # type: Dict[int, Tuple[int, int]]
+    positions_reverse = data["positions_reverse"] # type: Dict[Tuple[int, int], int]
+    edges = data["edges"] # type: Dict[int, Set[int]]
+    dists = data["dists"] # type: Dict[FrozenSet[int], float]
+    line_of_sight = data["line_of_sight"] # type: Dict[FrozenSet[int], float]
 
     # output
     #test_factor = 11

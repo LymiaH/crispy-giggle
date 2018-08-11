@@ -5,7 +5,7 @@ from waysimp import distance_squared
 import cv2
 import math
 import numpy as np
-import pickle
+import json
 
 DISPLAY_WIDTH = 1600
 DISPLAY_HEIGHT = 1200
@@ -14,11 +14,11 @@ DISPLAY_HEIGHT = 1200
 def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict[str, Any]) -> (np.ndarray, bool):
     R, C = img.shape[0:2]
     waysimp_data = global_data["waysimp"]
-    points: Set[int] = waysimp_data["points"]
-    positions: Dict[int, Tuple[int, int]] = waysimp_data["positions"]
-    positions_reverse: Dict[Tuple[int, int], int] = waysimp_data["positions_reverse"]
-    edges: Dict[int, Set[int]] = waysimp_data["edges"]
-    dists: Dict[Tuple[int, int], float] = waysimp_data["dists"]
+    points = waysimp_data["points"] # type: Set[int]
+    positions = waysimp_data["positions"] # type: Dict[int, Tuple[int, int]]
+    positions_reverse = waysimp_data["positions_reverse"] # type: Dict[Tuple[int, int], int]
+    edges = waysimp_data["edges"] # type: Dict[int, Set[int]]
+    dists = waysimp_data["dists"] # type: Dict[Tuple[int, int], float]
 
     # Ideas
     # Select a random point and follow it along till it reaches the start again?
@@ -36,14 +36,14 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
             min_distsq = distsq
             best_point = positions[point]
 
-    stack: List[int] = []
-    visited: Set[int] = set()
+    stack = [] # type: List[int]
+    visited = set() # type: Set[int]
     if best_point == (-1, -1):
         eprint("Oh come on...")
         return img, True
     pstart = positions_reverse[best_point]
     stack.append(pstart)
-    waypoint_ids: List[int] = []
+    waypoint_ids = [] # type: List[int]
     while len(stack) > 0:
         curr = stack.pop()
         if curr in visited:
@@ -77,7 +77,8 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
         cv2.circle(background_img, (c, r), 5, (0, 0, 0), -1)
     table_data = {}
     table_data["waypoints"] = waypoints
-    table_data["background"] = pickle.dumps(background_img)
-    print(pickle.dumps(table_data))
+    # table_data["background"] = pickle.dumps(background_img)
+    # print(pickle.dumps(table_data))
+    print(json.dumps(table_data))
     data["img"] = background_img
     return img, True

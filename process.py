@@ -87,7 +87,7 @@ if __name__ == '__main__':
     # Arguments
     constants.DEBUG = args["debug"]
     constants.QUIET = args["quiet"]
-    img: np.ndarray = args["input"]
+    img = args["input"] # type: np.ndarray
     if args["size"] > 0:
         img = resize(img, args["size"])
 
@@ -95,14 +95,14 @@ if __name__ == '__main__':
         cv2.imshow("input", img)
         # wait("input")
 
-    name_history: Dict[str, int] = {}
+    name_history = {} # type: Dict[str, int]
 
-    filt: Tuple[str, func_filter]
-    global_data: Dict[str, Any] = {}
+    filt = None # type: Tuple[str, func_filter]
+    global_data = {} # type: Dict[str, Any]
     global_data["neighbours"] = neighbours8
 
     for filt in args["filters"]:
-        name: str = filt[0]
+        name = filt[0] # type: str
 
         if not name in name_history:
             name_history[name] = 0
@@ -110,9 +110,9 @@ if __name__ == '__main__':
             name_history[name] = name_history[name] + 1
         name = name + str(name_history[name])
 
-        f: func_filter = filt[1]
-        i: int = 0
-        data: Dict[str, Any] = {}
+        f = filt[1] # type: func_filter
+        i = 0
+        data = {} # type: Dict[str, Any]
         data["input"] = np.copy(img)
         while True:
             img, finished = f(i, img, data, global_data)

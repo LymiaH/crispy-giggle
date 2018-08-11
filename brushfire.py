@@ -15,7 +15,8 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
     if len(img.shape) == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     R, C = img.shape
-    neighbours: Callable[[int, int, int, int], Iterator[Tuple[int, int]]] = global_data["neighbours"]
+    # neighbours: Callable[[int, int, int, int], Iterator[Tuple[int, int]]] = global_data["neighbours"]
+    neighbours = global_data["neighbours"]  # type: Callable[[int, int, int, int], Iterator[Tuple[int, int]]]
     retval, labels, stats, centroids = global_data["connected"]["connected"]
     if iteration == 0:
         # wavefront: List[Tuple[int, int]] = []

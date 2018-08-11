@@ -15,7 +15,7 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
     if len(img.shape) == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
 
-    groups: Dict[int, np.ndarray] = {}
+    groups = {} # type: Dict[int, np.ndarray]
     for group_id in range(1, retval):
         mask = np.zeros(labels.shape, np.uint8)
         mask[labels == group_id] = 255
@@ -23,7 +23,7 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
 
     midpoints = []
     for group_id, group in groups.items():
-        other_groups: np.ndarray = None
+        other_groups = None # type: np.ndarray
         for other_group_id, other_group in groups.items():
             if group_id == other_group_id:
                 continue
