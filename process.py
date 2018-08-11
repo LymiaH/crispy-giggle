@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict, Iterator, Tuple
 import cv2
 import importlib
 import numpy as np
+import constants
 
 def neighbours8(r:int, c:int, R:int, C:int) -> Iterator[Tuple[int, int]]:
     up = r > 0
@@ -46,6 +47,8 @@ def resize(img: np.ndarray, max_side_length: int) -> np.ndarray:
     return cv2.resize(img, (nc * max_side_length // longest_side, nr * max_side_length // longest_side))
 
 def wait(window_name: str):
+    if constants.QUIET:
+        return
     while cv2.getWindowProperty(window_name, 0) >= 0 and cv2.waitKey(50) == -1:
         pass
 
@@ -69,22 +72,28 @@ if __name__ == '__main__':
                       help="Input Image")
     args.add_argument("-s", "--size", type=int, default=-1, required=False,
                       help="Maximum side length. Image will be scaled down if larger.")
-
+    args.add_argument("-d", "--debug", action='store_true', required=False,
+                      help="Debug Mode (prints debug information to stderr)")
+    args.add_argument("-q", "--quiet", action='store_true', required=False,
+                      help="Quiet Mode (does not imshow and automatically closes on completion)")
 
     def check_filter(identifier: str) -> Tuple[str, func_filter]:
-        return (identifier, importlib.import_module(identifier).run)
+        return identifier, importlib.import_module(identifier).run
 
     args.add_argument('filters', metavar='F', type=check_filter, nargs='*',
                         help='Functions to apply')
     args = vars(args.parse_args())
 
     # Arguments
+    constants.DEBUG = args["debug"]
+    constants.QUIET = args["quiet"]
     img: np.ndarray = args["input"]
     if args["size"] > 0:
         img = resize(img, args["size"])
 
-    cv2.imshow("input", img)
-    # wait("input")
+    if not constants.QUIET:
+        cv2.imshow("input", img)
+        # wait("input")
 
     name_history: Dict[str, int] = {}
 
@@ -109,16 +118,15 @@ if __name__ == '__main__':
             img, finished = f(i, img, data, global_data)
             data["output"] = np.copy(img)
             global_data[filt[0]] = data
-            if "img" in data:
-                cv2.imshow(name, data["img"])
-            else:
-                cv2.imshow(name, img)
-
-            cv2.waitKey(1)  # Needed to force image to display...
+            if not constants.QUIET:
+                if "img" in data:
+                    cv2.imshow(name, data["img"])
+                else:
+                    cv2.imshow(name, img)
+                cv2.waitKey(1)  # Needed to force image to display...
             if finished:
                 break
             i = i + 1
-        # wait(name)
-
-    cv2.imshow("output", img)
-    wait("output")
+    if not constants.QUIET:
+        cv2.imshow("output", img)
+        wait("output")

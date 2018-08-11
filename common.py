@@ -1,3 +1,8 @@
+import json
+import sys
+
+import numpy
+
 
 def hsl_to_rgb(h: float, s: float, l: float) -> (int, int, int):
     """
@@ -16,3 +21,26 @@ def hsl_to_rgb(h: float, s: float, l: float) -> (int, int, int):
     rgb = [x + m for x in rgb]
     rgb = [int(min(x * 256, 255)) for x in rgb]
     return tuple(rgb)
+
+# MarcH @ https://stackoverflow.com/a/14981125/8408486
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+def jdump(data):
+    return json.dumps(data, cls=NumpyEncoder)
+
+# mgilson @ https://stackoverflow.com/a/27050186
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, numpy.int):
+            return int(obj)
+        elif isinstance(obj, numpy.float):
+            return float(obj)
+        elif isinstance(obj, numpy.ndarray):
+            return obj.tolist()
+        else:
+            return super(NumpyEncoder, self).default(obj)
+
+if __name__ == '__main__':
+    eprint(jdump(numpy.ones([3, 2], dtype=numpy.int32)))
+    pass

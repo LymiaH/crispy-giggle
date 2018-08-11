@@ -59,6 +59,6 @@ def some_filter(np.ndarray[DTYPE_t, ndim=2] source):
                 ):
                 #h[r, c] = 0
                 source[r, c] = 0
-                print(str(r) + "," + str(c) + ": " + str(count))
+                #print(str(r) + "," + str(c) + ": " + str(count))
     #return h
     return source

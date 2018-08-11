@@ -1,4 +1,4 @@
-from common import hsl_to_rgb
+from common import hsl_to_rgb, eprint
 from typing import Any, Callable, Dict, Iterator, List, Set, Tuple
 from itertools import chain
 
@@ -79,7 +79,7 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
             elif group == LEFT:
                 mask[0:R - 1, 0] = 255
             else:
-                print("How'd ya get here?")
+                eprint("How'd ya get here?")
 
         # Take away stuff that's already part of any groups since the previous iteration
         mask[groups != 0] = 0
@@ -121,7 +121,7 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
             elif group == VORONOI:
                 (r, g, b) = hsl_to_rgb(0.0, 1.0, 1.0)
             else:
-                print("How'd ya get here...?")
+                eprint("How'd ya get here...?")
         mask = np.zeros(img.shape, np.uint8)
         mask[new_groups == group] = 255
         output[mask > 0] = (b, g, r)

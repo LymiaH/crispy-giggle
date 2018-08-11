@@ -10,6 +10,6 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
     #         x[...] = 0
     #     else:
     #         x[...] = 255
-    img[img <= 127] = 0
-    img[img > 127] = 255
-    return img, True
+    new = np.zeros(img.shape[0:2], np.uint8)
+    new[img > 127] = 255
+    return new, True
