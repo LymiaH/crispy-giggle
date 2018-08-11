@@ -75,6 +75,13 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
         r = int(pos[0]) * MAP_HEIGHT // R
         c = int(pos[1]) * MAP_WIDTH // C
         cv2.circle(background_img, (c, r), 5, (0, 0, 0), -1)
+
+    # they need way points to be output in x, y format
+    for way in waypoints:
+        temp = way[0]
+        way[1] = way[1]
+        way[1] = temp
+
     table_data = {}
     table_data["waypoints"] = waypoints
     # table_data["background"] = pickle.dumps(background_img)
