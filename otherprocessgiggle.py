@@ -7,8 +7,8 @@ import subprocess
 import os
 
 CAM = None
-PARAMS = "-q -s -1 threshmarker invert connected brushfire afterbrush invert waysimp wayprint"
-COMMAND = 'python process.py'
+PARAMS = ['-q','-s','-1','threshmarker','invert','connected','brushfire','afterbrush','invert','waysimp','wayprint']
+COMMAND = ['python', 'process.py']
 WORKING_DIRECTORY = "../crispy-giggle/"
 
 def capture_waypoints() -> List:
@@ -25,17 +25,26 @@ def capture_waypoints() -> List:
     print("[CAPWAY] Saving frame...")
     path = tf.NamedTemporaryFile(suffix='.png').name
     cv2.imwrite(path, frame)
-    params = "-i " + path + " " + PARAMS
-    args = COMMAND + " " + params
-    print("[CAPWAY] Running: " + args)
-    result = subprocess.run(args, cwd=WORKING_DIRECTORY, capture_output=True, text=True)
-    print("[CAPWAY] Result: " + result.stdout)
-    if len(result.stderr) > 0:
-        print("[CAPWAY] Result: " + result.stderr)
+
+    args = []
+    for arg in COMMAND: args.append(arg)
+    args.append('-i')
+    args.append(path)
+    for arg in PARAMS: args.append(arg)
+
+    print("[CAPWAY] Running: " + ' '.join(args))
+    # result = subprocess.run(args, cwd=WORKING_DIRECTORY, capture_output=True, text=True)
+    p = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate()
+    stdout = stdout.decode("utf-8")
+    stderr = stderr.decode("utf-8")
+    print("[CAPWAY] Result: " + stdout)
+    if len(stderr) > 0:
+        print("[CAPWAY] Result: " + stderr)
     os.remove(path)
-    data = json.loads(result.stdout)
+    data = json.loads(stdout)
     if data is None or "waypoints" not in data:
-        print("[CAPWAY] Failed to capture waypoints (" + result.stdout + ")")
+        print("[CAPWAY] Failed to capture waypoints (" + stdout + ")")
     else:
         print("[CAPWAY] Found " + str(len(data["waypoints"])) + " waypoints!")
         waypoints = data["waypoints"]
