@@ -11,6 +11,15 @@ PARAMS = ['-q','-s','-1','threshmarker','invert','connected','brushfire','afterb
 COMMAND = ['python', 'process.py']
 WORKING_DIRECTORY = "../crispy-giggle/"
 
+# def init(cam):
+#     global CAM
+#     CAM = cam
+#
+# def get_response() -> Dict[str, list]:
+#     return {
+#         "waypoints": capture_waypoints()
+#     }
+
 def capture_waypoints() -> List:
     waypoints = [[640 // 4, 480 // 2], [640 * 3 // 2, 480 // 2]]
     print("[CAPWAY] Capturing image...")
@@ -34,7 +43,7 @@ def capture_waypoints() -> List:
 
     print("[CAPWAY] Running: " + ' '.join(args))
     # result = subprocess.run(args, cwd=WORKING_DIRECTORY, capture_output=True, text=True)
-    p = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(args, cwd=WORKING_DIRECTORY, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     stdout = stdout.decode("utf-8")
     stderr = stderr.decode("utf-8")
