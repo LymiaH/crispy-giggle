@@ -79,7 +79,7 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
     # they need way points to be output in x, y format
     for way in waypoints:
         temp = way[0]
-        way[1] = way[1]
+        way[0] = way[1]
         way[1] = temp
 
     table_data = {}
