@@ -55,25 +55,21 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
                 continue
             stack.append(neighbour)
     # Format for tabletop-car-simulator
-    MAP_WIDTH = 640
-    MAP_HEIGHT = 480
-    WAY_WIDTH = 640
-    WAY_HEIGHT = 480
     waypoints = []
     for wid in waypoint_ids:
         pos = positions[wid]
-        r = int(pos[0]) * WAY_HEIGHT // R
-        c = int(pos[1]) * WAY_WIDTH // C
+        r = int(pos[0])
+        c = int(pos[1])
         waypoints.append([r, c])
 
     # Background Image
-    background_img = np.full([MAP_HEIGHT, MAP_WIDTH], 255, np.uint8)
+    background_img = np.full([R, C], 255, np.uint8)
     background_img = cv2.cvtColor(background_img, cv2.COLOR_GRAY2BGR)
 
     for wid in waypoint_ids:
         pos = positions[wid]
-        r = int(pos[0]) * MAP_HEIGHT // R
-        c = int(pos[1]) * MAP_WIDTH // C
+        r = int(pos[0])
+        c = int(pos[1])
         cv2.circle(background_img, (c, r), 5, (0, 0, 0), -1)
 
     # they need way points to be output in x, y format

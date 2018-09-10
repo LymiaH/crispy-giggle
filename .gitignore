@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 /images/
 /build/
+/paths/comparer_*
 
 # cython
 *.pyd
