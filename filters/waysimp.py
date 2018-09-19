@@ -1,14 +1,15 @@
-from common import hsl_to_rgb, eprint
-from typing import Any, Callable, Dict, FrozenSet, Iterator, List, Set, Tuple
-from itertools import chain
-from brushfire import VORONOI
-from cython_functions import some_filter
+import math
+import time
+from typing import Any, Callable, Dict, FrozenSet, Iterator, Set, Tuple
 
 import cv2
-import constants
-import math
 import numpy as np
-import time
+from cython_functions import some_filter
+
+import constants
+from common import hsl_to_rgb, eprint
+from filters.brushfire import VORONOI
+
 
 def can_see_cached(mask: np.ndarray, positions: Dict[int, Tuple[int, int]], line_of_sight: Dict[FrozenSet[int], bool], a: int, b: int) -> bool:
     ref = frozenset([a, b])

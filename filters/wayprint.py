@@ -1,11 +1,11 @@
-from common import hsl_to_rgb, eprint, jdump
-from typing import Any, Callable, Dict, Iterator, List, Set, Tuple
-from waysimp import distance_squared
+import json
+from typing import Any, Dict, List, Set, Tuple
 
 import cv2
-import math
 import numpy as np
-import json
+
+from common import eprint
+from filters.waysimp import distance_squared
 
 DISPLAY_WIDTH = 1600
 DISPLAY_HEIGHT = 1200

@@ -78,7 +78,7 @@ if __name__ == '__main__':
                       help="Quiet Mode (does not imshow and automatically closes on completion)")
 
     def check_filter(identifier: str) -> Tuple[str, func_filter]:
-        return identifier, importlib.import_module(identifier).run
+        return identifier, importlib.import_module("filters." + identifier).run
 
     args.add_argument('filters', metavar='F', type=check_filter, nargs='*',
                         help='Functions to apply')
