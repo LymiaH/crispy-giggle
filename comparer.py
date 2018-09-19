@@ -15,6 +15,7 @@ import time
 DEBUG = False
 # -d -i 8.png -s -1 invert threshold connected brushfire afterbrush invert waysimp wayprint
 PARAMS = ['-q','-s','-1','threshold','invert','connected','brushfire','afterbrush','invert','waysimp','wayprintraw']
+PARAMS_GRAPH = ['-q','-s','-1','threshold','invert','connected','brushfire','afterbrush','invert','waysimp','waygraph']
 COMMAND = ['python', 'process.py']
 WORKING_DIRECTORY = Path("../crispy-giggle/")
 
@@ -49,8 +50,7 @@ def make_a_path(size: int = 512, thickness: int = 7):
         (WORKING_DIRECTORY / 'paths' / time.strftime("comparer_%Y-%m-%d_%H-%M-%S.txt")).write_text(str(output))
     return path
 
-def get_waypoints(frame: np.ndarray) -> List:
-    waypoints = []
+def run_processor(frame: np.ndarray, params: List[str]):
     print("[CAPWAY] Saving image to temporary file...")
     path = tf.NamedTemporaryFile(suffix='.png').name
     cv2.imwrite(path, frame)
@@ -59,11 +59,12 @@ def get_waypoints(frame: np.ndarray) -> List:
     for arg in COMMAND: args.append(arg)
     args.append('-i')
     args.append(path)
-    for arg in PARAMS: args.append(arg)
+    for arg in params: args.append(arg)
 
     print("[CAPWAY] Running: " + ' '.join(args))
     # result = subprocess.run(args, cwd=WORKING_DIRECTORY, capture_output=True, text=True)
-    p = subprocess.Popen(args, cwd=str(WORKING_DIRECTORY), stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(args, cwd=str(WORKING_DIRECTORY), stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     stdout = stdout.decode("utf-8")
     stderr = stderr.decode("utf-8")
@@ -71,6 +72,11 @@ def get_waypoints(frame: np.ndarray) -> List:
     if len(stderr) > 0:
         print("[CAPWAY] Result: " + stderr)
     os.remove(path)
+    return stdout
+
+def get_waypoints(frame: np.ndarray) -> List:
+    waypoints = []
+    stdout = run_processor(frame, PARAMS)
     data = json.loads(stdout)
     if data is None or "waypoints" not in data:
         print("[CAPWAY] Failed to capture waypoints (" + stdout + ")")
@@ -78,6 +84,61 @@ def get_waypoints(frame: np.ndarray) -> List:
         print("[CAPWAY] Found " + str(len(data["waypoints"])) + " waypoints!")
         waypoints = data["waypoints"]
     return waypoints
+
+def render_waypoints(img: np.ndarray, waypoints: np.ndarray):
+    # Draw the result image
+    if waypoints.shape[0] > 0:
+        cv2.polylines(img, [waypoints], True, 255, THICKNESS)
+    return img
+
+def detect_and_render_waypoints(input: np.ndarray, output: np.ndarray):
+    # Detect waypoints
+    waypoints = np.array(get_waypoints(input), dtype=np.int32)
+    print(waypoints)
+
+    # Render waypoints
+    return render_waypoints(output, waypoints)
+
+def get_graph(frame: np.ndarray):
+    stdout = run_processor(frame, PARAMS_GRAPH)
+    data = json.loads(stdout)
+    if data is None or "nodes" not in data or "edges" not in data:
+        print("[CAPWAY] Failed to capture graph (" + stdout + ")")
+        return {}, {}
+    else:
+        print("[CAPWAY] Found " + str(len(data["nodes"])) + " nodes and " + str(len(data["edges"])) + " edges!")
+        output_nodes = {}
+        for wid, pos in data["nodes"].items():
+            output_nodes[int(wid)] = (int(pos[0]), int(pos[1]))
+        output_edges = {}
+        for wid, connections in data["edges"].items():
+            output_edges[int(wid)] = set([int(cwid) for cwid in connections])
+
+        return output_nodes, output_edges
+
+def render_graph(img: np.ndarray, nodes, edges):
+    for wid, connections in edges.items():
+        r1 = nodes[wid][0]
+        c1 = nodes[wid][1]
+        if len(connections) == 0:
+            continue
+        for cwid in connections:
+            r2 = nodes[cwid][0]
+            c2 = nodes[cwid][1]
+            cv2.line(img, (c1, r1), (c2, r2), 255, thickness=THICKNESS)
+    return img
+
+
+def detect_and_render_graph(input: np.ndarray, output: np.ndarray):
+    # Detect graph
+    nodes, edges = get_graph(input)
+    print("Nodes:")
+    print(nodes)
+    print("Edges:")
+    print(edges)
+
+    # Render graph
+    return render_graph(output, nodes, edges)
 
 if __name__ == '__main__':
     args = ArgumentParser()
@@ -116,6 +177,21 @@ if __name__ == '__main__':
                       help="Width and Height of canvas (only used when making your own path)")
     args.add_argument("-d", "--debug", action='store_true', required=False,
                       help="Extra debug information")
+    args.add_argument("-q", "--quiet", action='store_true', required=False,
+                      help="Don't show guis")
+    MODES = {
+        'way': detect_and_render_waypoints,
+        'graph': detect_and_render_graph,
+    }
+
+    def check_mode(param: str):
+        param = param.lower()
+        if param not in MODES:
+            raise ArgumentTypeError("Must be one of: " + str(MODES))
+        return MODES[param]
+
+    args.add_argument("-m", "--mode", type=check_mode, default="way",
+                      help="Detection mode")
 
     args = vars(args.parse_args())
     cv2.waitKey(1)
@@ -125,6 +201,7 @@ if __name__ == '__main__':
         PARAMS.insert(0, "-d")
         PARAMS.remove('-q')
     THICKNESS = args["thickness"]
+    MODE = args["mode"]
 
     # Make your own path!
     if not "input" in args or args["input"] is None:
@@ -159,15 +236,12 @@ if __name__ == '__main__':
     cv2.imshow("reference", REFERENCE)
     cv2.waitKey(1)
 
-    # Detect waypoints
-    waypoints = np.array(get_waypoints(REFERENCE), dtype=np.int32)
-    print(waypoints)
-
-    # Draw the result image
+    # Detect and re-render the image
     img = np.zeros([HEIGHT, WIDTH], np.uint8)
-    if waypoints.shape[0] > 0:
-        cv2.polylines(img, [waypoints], True, 255, THICKNESS)
+    MODE(REFERENCE, img)
     RESULT = img
+
+    # Display Result
     cv2.imshow("result", RESULT)
     cv2.waitKey(1)
 
@@ -192,8 +266,8 @@ if __name__ == '__main__':
     num_extra = cv2.findNonZero(maskRes).shape[0]
     num_total = num_correct + num_extra + num_missing
     DIFFERENCE = img
-    print("Correct: %d %d%%" % (num_extra, num_correct * 100 // num_total))
-    print("Missing: %d %d%%" % (num_extra, num_missing * 100 // num_total))
+    print("Correct: %d %d%%" % (num_correct, num_correct * 100 // num_total))
+    print("Missing: %d %d%%" % (num_missing, num_missing * 100 // num_total))
     print("Extra: %d %d%%" % (num_extra, num_extra * 100 // num_total))
     print("Total: %d" % num_total)
     cv2.imshow("difference", DIFFERENCE)
