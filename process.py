@@ -77,6 +77,10 @@ if __name__ == '__main__':
     args.add_argument("-q", "--quiet", action='store_true', required=False,
                       help="Quiet Mode (does not imshow and automatically closes on completion)")
 
+    # Configuration flags
+    args.add_argument("-c", "--config", nargs=2, action='append', required=False,
+                      help="Configuration for filters, refer to specific filters files for details.")
+
     def check_filter(identifier: str) -> Tuple[str, func_filter]:
         return identifier, importlib.import_module("filters." + identifier).run
 
@@ -94,6 +98,10 @@ if __name__ == '__main__':
     if not constants.QUIET:
         cv2.imshow("input", img)
         # wait("input")
+
+    if args["config"] is not None:
+        for keyval in args["config"]:
+            constants.CONFIG[keyval[0]] = keyval[1]
 
     name_history = {} # type: Dict[str, int]
 

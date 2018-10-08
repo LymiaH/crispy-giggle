@@ -13,9 +13,19 @@ import numpy as np
 import time
 
 DEBUG = False
+EXTRA_PARAMS_WAYSIMP_TRIANGLE = ['-c','waysimp_mode','triangle']
+EXTRA_PARAMS_WAYSIMP_NONE = ['-c','waysimp_mode','none']
+OUTPUT_PARAMS_WAYPOINTS = ['wayprintraw']
+OUTPUT_PARAMS_GRAPH = ['waygraph']
 # -d -i 8.png -s -1 invert threshold connected brushfire afterbrush invert waysimp wayprint
-PARAMS = ['-q','-s','-1','threshold','invert','connected','brushfire','afterbrush','invert','waysimp','wayprintraw']
-PARAMS_GRAPH = ['-q','-s','-1','threshold','invert','connected','brushfire','afterbrush','invert','waysimp','waygraph']
+PARAMS = ['-q','-s','-1','threshold','invert','connected','brushfire','afterbrush','invert','waysimp']
+
+TEST_PARAMS = {
+    "los_simp": PARAMS,
+    "no_simp": EXTRA_PARAMS_WAYSIMP_NONE + PARAMS,
+    "tri_simp": EXTRA_PARAMS_WAYSIMP_TRIANGLE + PARAMS,
+}
+
 COMMAND = ['python', 'process.py']
 WORKING_DIRECTORY = Path("../crispy-giggle/")
 
@@ -76,7 +86,7 @@ def run_processor(frame: np.ndarray, params: List[str]):
 
 def get_waypoints(frame: np.ndarray) -> List:
     waypoints = []
-    stdout = run_processor(frame, PARAMS)
+    stdout = run_processor(frame, PARAMS + OUTPUT_PARAMS_WAYPOINTS)
     data = json.loads(stdout)
     if data is None or "waypoints" not in data:
         print("[CAPWAY] Failed to capture waypoints (" + stdout + ")")
@@ -100,7 +110,7 @@ def detect_and_render_waypoints(input: np.ndarray, output: np.ndarray):
     return render_waypoints(output, waypoints)
 
 def get_graph(frame: np.ndarray):
-    stdout = run_processor(frame, PARAMS_GRAPH)
+    stdout = run_processor(frame, PARAMS + OUTPUT_PARAMS_GRAPH)
     data = json.loads(stdout)
     if data is None or "nodes" not in data or "edges" not in data:
         print("[CAPWAY] Failed to capture graph (" + stdout + ")")
@@ -179,6 +189,14 @@ if __name__ == '__main__':
                       help="Extra debug information")
     args.add_argument("-q", "--quiet", action='store_true', required=False,
                       help="Don't show guis")
+
+    def check_test_case(arg: str):
+        if arg in TEST_PARAMS:
+            return TEST_PARAMS[arg]
+        raise ArgumentTypeError("Should be one of: " + ",".join(TEST_PARAMS.keys()))
+    args.add_argument("-tc", "--test-case", type=check_test_case, default="los_simp",
+                      help="Test Case to use from: " + ",".join(TEST_PARAMS.keys()))
+
     MODES = {
         'way': detect_and_render_waypoints,
         'graph': detect_and_render_graph,
@@ -202,9 +220,16 @@ if __name__ == '__main__':
         PARAMS.remove('-q')
     THICKNESS = args["thickness"]
     MODE = args["mode"]
+    QUIET = args["quiet"]
+
+    # Test Case
+    PARAMS = args["test_case"]
 
     # Make your own path!
     if not "input" in args or args["input"] is None:
+        if QUIET:
+            print("Quiet Mode requires an input")
+            exit(1)
         args["input"] = make_a_path(args["size"], THICKNESS)
     LOOP = args["input"]
     if LOOP.shape[0] < 1:
@@ -233,8 +258,9 @@ if __name__ == '__main__':
     if LOOP.shape[0] > 0:
         cv2.polylines(img, [LOOP], True, 255, THICKNESS)
     REFERENCE = img
-    cv2.imshow("reference", REFERENCE)
-    cv2.waitKey(1)
+    if not QUIET:
+        cv2.imshow("reference", REFERENCE)
+        cv2.waitKey(1)
 
     # Detect and re-render the image
     img = np.zeros([HEIGHT, WIDTH], np.uint8)
@@ -242,8 +268,9 @@ if __name__ == '__main__':
     RESULT = img
 
     # Display Result
-    cv2.imshow("result", RESULT)
-    cv2.waitKey(1)
+    if not QUIET:
+        cv2.imshow("result", RESULT)
+        cv2.waitKey(1)
 
     # Draw the difference image
     img = np.zeros([HEIGHT, WIDTH, 3], np.uint8)
@@ -270,6 +297,7 @@ if __name__ == '__main__':
     print("Missing: %d %d%%" % (num_missing, num_missing * 100 // num_total))
     print("Extra: %d %d%%" % (num_extra, num_extra * 100 // num_total))
     print("Total: %d" % num_total)
-    cv2.imshow("difference", DIFFERENCE)
-    cv2.waitKey(0)
-    pass
+    if not QUIET:
+        cv2.imshow("difference", DIFFERENCE)
+        cv2.waitKey(0)
+    exit(0)

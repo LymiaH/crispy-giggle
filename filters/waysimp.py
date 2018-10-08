@@ -79,6 +79,30 @@ def can_see(mask: np.ndarray, a: Tuple[int, int], b: Tuple[int, int]) -> bool:
     #             error = error - 1.0
     # return True
 
+def can_tri(mask: np.ndarray, a: Tuple[int, int], b: Tuple[int, int], c: Tuple[int, int]) -> bool:
+    # TODO: Reimplement, LOL
+    minr = max(min(a[0], b[0], c[0]), 0)
+    minc = max(min(a[1], b[1], c[1]), 0)
+    maxr = min(max(a[0], b[0], c[0]) + 1, mask.shape[0])
+    maxc = min(max(a[1], b[1], c[1]) + 1, mask.shape[1])
+    R = maxr - minr
+    C = maxc - minc
+    if R <= 0 or C <= 0:
+        eprint("What is going on?")
+    temp = np.zeros([R, C], np.uint8)
+    cv2.fillPoly(temp, np.array([[[a[1] - minc, a[0] - minr],[b[1] - minc, b[0] - minr],[c[1] - minc, c[0] - minr]]], 'int32'), 255)
+    #cv2.line(temp, (a[1] - minc, a[0] - minr), (b[1] - minc, b[0] - minr), 255, 1)
+    # Set all road pixels to 0 as well
+    submask = mask[minr:maxr, minc:maxc]
+    if temp.shape[0] != submask.shape[0] or temp.shape[1] != submask.shape[1]:
+        eprint("Something went really wrong...")
+    temp[submask > 0] = 0
+
+    # If any is found, then there is a collision
+    if cv2.findNonZero(temp) is not None:
+        return False
+    return True
+
 def distance_squared(a: Tuple[int, int], b: Tuple[int, int]) -> int:
     return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2
 
@@ -204,6 +228,21 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
 
     # Simplification
     def point_filter(curr):
+        if "waysimp_mode" in constants.CONFIG:
+            if constants.CONFIG["waysimp_mode"] == "none":
+                return True
+            elif constants.CONFIG["waysimp_mode"] == "triangle":
+                if len(edges[curr]) == 2:
+                    neighbours = list(edges[curr])
+                    n1 = neighbours[0]
+                    n2 = neighbours[1]
+                    if can_tri(road_mask, positions[curr], positions[n1], positions[n2]):
+                        remove_edge(edges, dists, curr, n1)
+                        remove_edge(edges, dists, curr, n2)
+                        add_edge(positions, edges, dists, n1, n2)
+                        # points.remove(curr)
+                        return False
+                return True
         if len(edges[curr]) == 2:
             neighbours = list(edges[curr])
             n1 = neighbours[0]
