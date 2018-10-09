@@ -1,8 +1,7 @@
 import subprocess
+import traceback
 from argparse import ArgumentParser
 from pathlib import Path
-
-import time
 
 from common import eprint
 
@@ -39,17 +38,17 @@ def run_comparer(graph_path: str = "./paths/twointersect.txt", mode: str = "grap
     for arg in PARAMS: args.append(arg)
 
     qprint("[EXPERIMENT] Running: " + ' '.join(args))
-    p = subprocess.Popen(args,
-                         cwd=str(WORKING_DIRECTORY),
-                         stdin=subprocess.DEVNULL,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE,
-                         )
-    stdout, stderr = p.communicate()
-    stdout = stdout.decode("utf-8")
-    stderr = stderr.decode("utf-8")
+    p = subprocess.Popen(
+        args,
+        cwd=str(WORKING_DIRECTORY),
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    stdout, stderr = p.communicate()  # type: str, str
     qprint("[EXPERIMENT] Result: " + stdout)
-    if len(stderr) > 0:
+    if stderr and len(stderr) > 0:
         qprint("[EXPERIMENT] Errors: " + stderr)
     return tuple(int(num) for num in stdout.strip().split(','))
 
@@ -89,16 +88,20 @@ if __name__ == '__main__':
 
 
         def do_experiment(graph, mode, test_case, thickness):
-            correct, missing, extra = run_comparer(
-                graph_path="./paths/%s.txt" % graph,
-                mode=mode,
-                test_case=test_case,
-                thickness=thickness,
-            )
-            out.write("%s,%s,%s,%d,%d,%d,%d" % (graph, mode, test_case, thickness, correct, missing, extra))
+            correct, missing, extra = 0, 0, 0
+            try:
+                correct, missing, extra = run_comparer(
+                    graph_path="./paths/%s.txt" % graph,
+                    mode=mode,
+                    test_case=test_case,
+                    thickness=thickness,
+                )
+            except:
+                traceback.print_exc()
+                qprint("Experiment failed.")
+
+            out.write("%s,%s,%s,%d,%d,%d,%d\n" % (graph, mode, test_case, thickness, correct, missing, extra))
             out.flush()
-            qprint("Waiting 10 seconds...")
-            time.sleep(10)
 
 
         for graph in GRAPHS:

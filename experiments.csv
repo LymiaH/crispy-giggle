@@ -1,2 +1,15 @@
 Graph,Mode,TestCase,Thickness,Correct,Missing,Extra
-twointersect,way,no_simp,2,4122,1553,391twointersect,way,no_simp,3,7232,4251,341twointersect,way,no_simp,4,7232,4251,341twointersect,way,no_simp,5,10135,6152,813
+twointersect,way,no_simp,2,4122,1553,391
+twointersect,way,no_simp,3,7232,4251,341
+twointersect,way,no_simp,4,7232,4251,341
+twointersect,way,no_simp,5,10135,6152,813
+twointersect,way,no_simp,6,10135,6152,813
+twointersect,way,no_simp,7,13022,8033,898
+twointersect,way,no_simp,8,13022,8033,898
+twointersect,way,no_simp,9,15862,9812,1042
+twointersect,way,no_simp,10,15862,9812,1042
+twointersect,way,no_simp,11,18287,11230,1168
+twointersect,way,no_simp,12,18287,11230,1168
+twointersect,way,no_simp,13,21244,13227,1373
+twointersect,way,no_simp,14,21244,13227,1373
+twointersect,way,no_simp,15,23696,14861,1455
