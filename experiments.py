@@ -1,4 +1,5 @@
 import subprocess
+import tempfile
 import traceback
 from argparse import ArgumentParser
 from pathlib import Path
@@ -44,7 +45,9 @@ def run_comparer(graph_path: str = "./paths/twointersect.txt", mode: str = "grap
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        universal_newlines = True,
         text=True,
+        shell=True
     )
     stdout, stderr = p.communicate()  # type: str, str
     qprint("[EXPERIMENT] Result: " + stdout)
