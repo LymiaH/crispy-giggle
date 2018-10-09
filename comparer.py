@@ -119,6 +119,11 @@ def detect_and_render_waypoints(input: np.ndarray, output: np.ndarray):
     waypoints = np.array(get_waypoints(input), dtype=np.int32)
     qout(waypoints)
 
+    # This is a poor way to do it...
+    global OUTPUT_NODES, OUTPUT_EDGES
+    OUTPUT_NODES = len(waypoints)
+    OUTPUT_EDGES = len(waypoints)
+
     # Render waypoints
     return render_waypoints(output, waypoints)
 
@@ -159,6 +164,11 @@ def detect_and_render_graph(input: np.ndarray, output: np.ndarray):
     qout(nodes)
     qout("Edges:")
     qout(edges)
+
+    # This is a poor way to do it...
+    global OUTPUT_NODES, OUTPUT_EDGES
+    OUTPUT_NODES = len(nodes)
+    OUTPUT_EDGES = len(edges)
 
     # Render graph
     return render_graph(output, nodes, edges)
@@ -201,7 +211,7 @@ if __name__ == '__main__':
     args.add_argument("-d", "--debug", action='store_true', required=False,
                       help="Extra debug information")
     args.add_argument("-q", "--quiet", action='store_true', required=False,
-                      help="Don't show guis. Print most things to stderr instead of stdout. Only writes to stdout: CORRECT,MISSING,EXTRA")
+                      help="Don't show guis. Print most things to stderr instead of stdout. Only writes to stdout: CORRECT,MISSING,EXTRA,NODES,EDGES")
 
     def check_test_case(arg: str):
         if arg in TEST_PARAMS:
@@ -277,6 +287,10 @@ if __name__ == '__main__':
 
     # Detect and re-render the image
     img = np.zeros([HEIGHT, WIDTH], np.uint8)
+
+    # This is a poor way to do it...
+    OUTPUT_NODES = 0
+    OUTPUT_EDGES = 0
     MODE(REFERENCE, img)
     RESULT = img
 
@@ -314,5 +328,5 @@ if __name__ == '__main__':
         cv2.imshow("difference", DIFFERENCE)
         cv2.waitKey(0)
     else:
-        print("%d,%d,%d" % (num_correct, num_missing, num_extra))
+        print("%d,%d,%d,%d,%d" % (num_correct, num_missing, num_extra, OUTPUT_NODES, OUTPUT_EDGES))
     exit(0)
