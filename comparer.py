@@ -12,6 +12,10 @@ import os
 import numpy as np
 import time
 
+import sys
+
+from common import eprint
+
 DEBUG = False
 EXTRA_PARAMS_WAYSIMP_TRIANGLE = ['-c','waysimp_mode','triangle']
 EXTRA_PARAMS_WAYSIMP_NONE = ['-c','waysimp_mode','none']
@@ -26,8 +30,17 @@ TEST_PARAMS = {
     "tri_simp": EXTRA_PARAMS_WAYSIMP_TRIANGLE + PARAMS,
 }
 
-COMMAND = ['python', 'process.py']
+COMMAND = ['python', '-u', 'process.py']
 WORKING_DIRECTORY = Path("../crispy-giggle/")
+
+def qout(message: str):
+    if not QUIET:
+        print(message)
+    else:
+        eprint(message)
+
+def qerr(message: str):
+    eprint(message)
 
 def make_a_path(size: int = 512, thickness: int = 7):
     path = np.zeros(shape=[0, 2], dtype=np.int32)
@@ -61,7 +74,7 @@ def make_a_path(size: int = 512, thickness: int = 7):
     return path
 
 def run_processor(frame: np.ndarray, params: List[str]):
-    print("[CAPWAY] Saving image to temporary file...")
+    qout("[CAPWAY] Saving image to temporary file...")
     path = tf.NamedTemporaryFile(suffix='.png').name
     cv2.imwrite(path, frame)
 
@@ -71,16 +84,16 @@ def run_processor(frame: np.ndarray, params: List[str]):
     args.append(path)
     for arg in params: args.append(arg)
 
-    print("[CAPWAY] Running: " + ' '.join(args))
+    qout("[CAPWAY] Running: " + ' '.join(args))
     # result = subprocess.run(args, cwd=WORKING_DIRECTORY, capture_output=True, text=True)
     p = subprocess.Popen(args, cwd=str(WORKING_DIRECTORY), stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     stdout = stdout.decode("utf-8")
     stderr = stderr.decode("utf-8")
-    print("[CAPWAY] Result: " + stdout)
+    qout("[CAPWAY] Result: " + stdout)
     if len(stderr) > 0:
-        print("[CAPWAY] Result: " + stderr)
+        qout("[CAPWAY] Result: " + stderr)
     os.remove(path)
     return stdout
 
@@ -89,9 +102,9 @@ def get_waypoints(frame: np.ndarray) -> List:
     stdout = run_processor(frame, PARAMS + OUTPUT_PARAMS_WAYPOINTS)
     data = json.loads(stdout)
     if data is None or "waypoints" not in data:
-        print("[CAPWAY] Failed to capture waypoints (" + stdout + ")")
+        qout("[CAPWAY] Failed to capture waypoints (" + stdout + ")")
     else:
-        print("[CAPWAY] Found " + str(len(data["waypoints"])) + " waypoints!")
+        qout("[CAPWAY] Found " + str(len(data["waypoints"])) + " waypoints!")
         waypoints = data["waypoints"]
     return waypoints
 
@@ -104,7 +117,7 @@ def render_waypoints(img: np.ndarray, waypoints: np.ndarray):
 def detect_and_render_waypoints(input: np.ndarray, output: np.ndarray):
     # Detect waypoints
     waypoints = np.array(get_waypoints(input), dtype=np.int32)
-    print(waypoints)
+    qout(waypoints)
 
     # Render waypoints
     return render_waypoints(output, waypoints)
@@ -113,10 +126,10 @@ def get_graph(frame: np.ndarray):
     stdout = run_processor(frame, PARAMS + OUTPUT_PARAMS_GRAPH)
     data = json.loads(stdout)
     if data is None or "nodes" not in data or "edges" not in data:
-        print("[CAPWAY] Failed to capture graph (" + stdout + ")")
+        qout("[CAPWAY] Failed to capture graph (" + stdout + ")")
         return {}, {}
     else:
-        print("[CAPWAY] Found " + str(len(data["nodes"])) + " nodes and " + str(len(data["edges"])) + " edges!")
+        qout("[CAPWAY] Found " + str(len(data["nodes"])) + " nodes and " + str(len(data["edges"])) + " edges!")
         output_nodes = {}
         for wid, pos in data["nodes"].items():
             output_nodes[int(wid)] = (int(pos[0]), int(pos[1]))
@@ -142,10 +155,10 @@ def render_graph(img: np.ndarray, nodes, edges):
 def detect_and_render_graph(input: np.ndarray, output: np.ndarray):
     # Detect graph
     nodes, edges = get_graph(input)
-    print("Nodes:")
-    print(nodes)
-    print("Edges:")
-    print(edges)
+    qout("Nodes:")
+    qout(nodes)
+    qout("Edges:")
+    qout(edges)
 
     # Render graph
     return render_graph(output, nodes, edges)
@@ -180,15 +193,15 @@ if __name__ == '__main__':
         return np.array(path, dtype=np.int32)
 
     args.add_argument("-i", "--input", type=check_array_of_tuples, default="",
-                      help="Input loop or file containing loop (e.g. [(0,0),(0, 100),(100, 100),(100,0)] or loop.txt). Otherwise a dialog will open to allow you to create a loop.")
+                      help="Input loop or file containing loop (e.g. [(0,0),(0, 100),(100, 100),(100,0)] or loop.txt). Otherwise a dialog will open to allow you to create a loop. (This is not compatible with quiet mode)")
     args.add_argument("-t", "--thickness", type=int, default=15,
-                      help="Line thickness to use")
+                      help="Line thickness to use (default 15px)")
     args.add_argument("-s", "--size", type=int, default=1024,
                       help="Width and Height of canvas (only used when making your own path)")
     args.add_argument("-d", "--debug", action='store_true', required=False,
                       help="Extra debug information")
     args.add_argument("-q", "--quiet", action='store_true', required=False,
-                      help="Don't show guis")
+                      help="Don't show guis. Print most things to stderr instead of stdout. Only writes to stdout: CORRECT,MISSING,EXTRA")
 
     def check_test_case(arg: str):
         if arg in TEST_PARAMS:
@@ -228,13 +241,13 @@ if __name__ == '__main__':
     # Make your own path!
     if not "input" in args or args["input"] is None:
         if QUIET:
-            print("Quiet Mode requires an input")
+            qerr("Quiet Mode requires an input")
             exit(1)
         args["input"] = make_a_path(args["size"], THICKNESS)
     LOOP = args["input"]
     if LOOP.shape[0] < 1:
         raise RuntimeError("Loop is empty")
-    print(LOOP)
+    qout(LOOP)
 
     # Work out dimensions for image with padding
     minx, miny = np.min(LOOP, axis=0)
@@ -293,11 +306,13 @@ if __name__ == '__main__':
     num_extra = cv2.findNonZero(maskRes).shape[0]
     num_total = num_correct + num_extra + num_missing
     DIFFERENCE = img
-    print("Correct: %d %d%%" % (num_correct, num_correct * 100 // num_total))
-    print("Missing: %d %d%%" % (num_missing, num_missing * 100 // num_total))
-    print("Extra: %d %d%%" % (num_extra, num_extra * 100 // num_total))
-    print("Total: %d" % num_total)
+    qout("Correct: %d %d%%" % (num_correct, num_correct * 100 // num_total))
+    qout("Missing: %d %d%%" % (num_missing, num_missing * 100 // num_total))
+    qout("Extra: %d %d%%" % (num_extra, num_extra * 100 // num_total))
+    qout("Total: %d" % num_total)
     if not QUIET:
         cv2.imshow("difference", DIFFERENCE)
         cv2.waitKey(0)
+    else:
+        print("%d,%d,%d" % (num_correct, num_missing, num_extra))
     exit(0)

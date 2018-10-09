@@ -1,0 +1,2 @@
+Graph,Mode,TestCase,Thickness,Correct,Missing,Extra
+twointersect,way,no_simp,2,4122,1553,391twointersect,way,no_simp,3,7232,4251,341twointersect,way,no_simp,4,7232,4251,341twointersect,way,no_simp,5,10135,6152,813
