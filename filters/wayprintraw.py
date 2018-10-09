@@ -38,12 +38,13 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
 
     stack = [] # type: List[int]
     visited = set() # type: Set[int]
+    waypoint_ids = []  # type: List[int]
     if best_point == (-1, -1):
         eprint("Oh come on...")
-        return img, True
-    pstart = positions_reverse[best_point]
-    stack.append(pstart)
-    waypoint_ids = [] # type: List[int]
+        #return img, True
+    else:
+        stack.append(positions_reverse[best_point])
+
     while len(stack) > 0:
         curr = stack.pop()
         if curr in visited:

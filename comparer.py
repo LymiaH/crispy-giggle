@@ -93,7 +93,7 @@ def run_processor(frame: np.ndarray, params: List[str]):
     stderr = stderr.decode("utf-8")
     qout("[CAPWAY] Result: " + stdout)
     if len(stderr) > 0:
-        qout("[CAPWAY] Result: " + stderr)
+        qout("[CAPWAY] Error: " + stderr)
     os.remove(path)
     return stdout
 
@@ -314,12 +314,15 @@ if __name__ == '__main__':
     maskRef = np.zeros(img.shape[:2], np.uint8)
     maskRes = np.zeros(img.shape[:2], np.uint8)
 
-    maskRefRes[REFERENCE == 255] = 255
-    maskRefRes[RESULT == 255] = 255
+    # Missing Pixels: Reference AND NOT(Result)
     maskRef[REFERENCE == 255] = 255
     maskRef[RESULT == 255] = 0
+    # Extra Pixels: Result AND NOT(Reference)
     maskRes[RESULT == 255] = 255
     maskRes[REFERENCE == 255] = 0
+    # Correct Pixels: Reference AND NOT(Missing)
+    maskRefRes[REFERENCE == 255] = 255
+    maskRefRes[maskRef == 255] = 0
 
     img[maskRefRes > 0] = (0, 255, 0) # Correct
     img[maskRef > 0] = (255, 0, 0) # Missing
