@@ -324,6 +324,9 @@ if __name__ == '__main__':
     qout("Missing: %d %d%%" % (num_missing, num_missing * 100 // num_total))
     qout("Extra: %d %d%%" % (num_extra, num_extra * 100 // num_total))
     qout("Total: %d" % num_total)
+    qout("Nodes: %d" % OUTPUT_NODES)
+    qout("Edges: %d" % OUTPUT_EDGES)
+
     if not QUIET:
         cv2.imshow("difference", DIFFERENCE)
         cv2.waitKey(0)

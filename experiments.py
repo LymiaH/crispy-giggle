@@ -8,6 +8,8 @@ import time
 
 import os
 
+import itertools
+
 from common import eprint
 
 PARAMS = ['-q']
@@ -74,18 +76,24 @@ if __name__ == '__main__':
             raise ArgumentTypeError("Expected integer greater than or equal to zero.")
         return val
 
-    args.add_argument("-s", "--skip", type=int_gte_zero, required=False, default=0,
+    args.add_argument("-s", "--start", type=int_gte_zero, required=False, default=0,
                       help="Skip to the given experiment number")
+    args.add_argument("-e", "--end", type=int, required=False, default=-1,
+                      help="Stop after completing this experiment number")
+    args.add_argument("-dr", "--dry-run", action='store_true', required=False,
+                      help="Do not actually run the experiments (outputs with -1 failed results)")
 
     args = vars(args.parse_args())
     QUIET = args["quiet"]
-    SKIP = args["skip"]
+    START = args["start"]
+    END = args["end"]
+    DRYRUN = args["dry_run"]
 
     GRAPHS = [
         'twointersect',
         'crazy',
         'lots_of_triangles',
-        'not_a_star',
+        'notastar',
         'quad_n_tri',
     ]
 
@@ -115,30 +123,32 @@ if __name__ == '__main__':
         def do_experiment(num, graph, mode, test_case, thickness):
             qprint("Conducting Experiment #%d" % num)
             elapsed, correct, missing, extra, nodes, edges = -1, -1, -1, -1, -1, -1
-            try:
-                elapsed, correct, missing, extra, nodes, edges = run_comparer(
-                    graph_path="./paths/%s.txt" % graph,
-                    mode=mode,
-                    test_case=test_case,
-                    thickness=thickness,
-                )
-            except:
-                traceback.print_exc()
-                qprint("Experiment failed.")
+            if not DRYRUN:
+                try:
+                    elapsed, correct, missing, extra, nodes, edges = run_comparer(
+                        graph_path="./paths/%s.txt" % graph,
+                        mode=mode,
+                        test_case=test_case,
+                        thickness=thickness,
+                    )
+                except:
+                    traceback.print_exc()
+                    qprint("Experiment failed.")
 
             out.write("%d,%s,%s,%s,%d,%f,%d,%d,%d,%d,%d\n" % (num, graph, mode, test_case, thickness, elapsed, correct, missing, extra, nodes, edges))
             out.flush()
 
         num = -1
-        toskip = SKIP
+        toskip = START
         if toskip > 0:
             qprint("Skipping to experiment #%d" % toskip)
-        for graph in GRAPHS:
-            for mode in MODES:
-                for test_case in TEST_CASES:
-                    for thickness in THICKNESSES:
-                        num += 1
-                        if toskip > 0:
-                            toskip -= 1
-                            continue
-                        do_experiment(num, graph, mode, test_case, thickness)
+
+        for graph, mode, test_case, thickness in itertools.product(GRAPHS, MODES, TEST_CASES, THICKNESSES):
+            num += 1
+            if toskip > 0:
+                toskip -= 1
+                continue
+            do_experiment(num, graph, mode, test_case, thickness)
+            if END >= 0 and num >= END:
+                qprint("End reached. Experiment #%d" % num)
+                break
