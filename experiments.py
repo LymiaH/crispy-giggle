@@ -54,7 +54,7 @@ def run_comparer(graph_path: str = "./paths/twointersect.txt", mode: str = "grap
         stderr=subprocess.PIPE,
         universal_newlines=True,
         text=True,
-        shell=True
+        shell=True,
     )
     stdout, stderr = p.communicate()  # type: str, str
     end = timer()
@@ -90,11 +90,15 @@ if __name__ == '__main__':
     DRYRUN = args["dry_run"]
 
     GRAPHS = [
-        'twointersect',
-        'crazy',
-        'lots_of_triangles',
-        'notastar',
-        'quad_n_tri',
+        'triangle',
+        'square',
+        'circle',
+        'infinity',
+        'candy',
+        'triforce',
+        'square_in_square',
+        'chaotic',
+        'plus',
     ]
 
     MODES = [
@@ -108,7 +112,7 @@ if __name__ == '__main__':
         'tri_simp',
     ]
 
-    THICKNESSES = [i for i in range(2, 16)]
+    THICKNESSES = [3, 5, 7, 9, 11, 13, 15]
 
     try:
         os.makedirs(str(WORKING_DIRECTORY / 'experiments'))

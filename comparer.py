@@ -127,6 +127,15 @@ def detect_and_render_waypoints(input: np.ndarray, output: np.ndarray):
     # Render waypoints
     return render_waypoints(output, waypoints)
 
+def count_edges(adj_list: Dict[int, List[int]]):
+    edge_node_pairs = set()
+    for curr, neighbours in adj_list.items():
+        for neighbour in neighbours:
+            node_min = min(int(curr), int(neighbour))
+            node_max = max(int(curr), int(neighbour))
+            edge_node_pairs.add((node_min, node_max))
+    return len(edge_node_pairs)
+
 def get_graph(frame: np.ndarray):
     stdout = run_processor(frame, PARAMS + OUTPUT_PARAMS_GRAPH)
     data = json.loads(stdout)
@@ -134,7 +143,7 @@ def get_graph(frame: np.ndarray):
         qout("[CAPWAY] Failed to capture graph (" + stdout + ")")
         return {}, {}
     else:
-        qout("[CAPWAY] Found " + str(len(data["nodes"])) + " nodes and " + str(len(data["edges"])) + " edges!")
+        qout("[CAPWAY] Found " + str(len(data["nodes"])) + " nodes and " + str(count_edges(data["edges"])) + " edges!")
         output_nodes = {}
         for wid, pos in data["nodes"].items():
             output_nodes[int(wid)] = (int(pos[0]), int(pos[1]))
@@ -168,7 +177,7 @@ def detect_and_render_graph(input: np.ndarray, output: np.ndarray):
     # This is a poor way to do it...
     global OUTPUT_NODES, OUTPUT_EDGES
     OUTPUT_NODES = len(nodes)
-    OUTPUT_EDGES = len(edges)
+    OUTPUT_EDGES = count_edges(edges)
 
     # Render graph
     return render_graph(output, nodes, edges)
@@ -315,9 +324,13 @@ if __name__ == '__main__':
     img[maskRefRes > 0] = (0, 255, 0) # Correct
     img[maskRef > 0] = (255, 0, 0) # Missing
     img[maskRes > 0] = (0, 0, 255)  # Extra
-    num_correct = cv2.findNonZero(maskRefRes).shape[0]
-    num_missing = cv2.findNonZero(maskRef).shape[0]
-    num_extra = cv2.findNonZero(maskRes).shape[0]
+    num_correct = cv2.findNonZero(maskRefRes)
+    num_missing = cv2.findNonZero(maskRef)
+    num_extra = cv2.findNonZero(maskRes)
+    num_correct = 0 if num_correct is None else num_correct.shape[0]
+    num_missing = 0 if num_missing is None else num_missing.shape[0]
+    num_extra = 0 if num_extra is None else num_extra.shape[0]
+
     num_total = num_correct + num_extra + num_missing
     DIFFERENCE = img
     qout("Correct: %d %d%%" % (num_correct, num_correct * 100 // num_total))
