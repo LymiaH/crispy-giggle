@@ -6,6 +6,7 @@ __pycache__/
 /build/
 /paths/comparer_*
 /experiments/experiments_*
+/experiments/images*
 
 # cython
 *.pyd

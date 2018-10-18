@@ -1,3 +1,6 @@
+import time
+
+import constants
 from common import hsl_to_rgb, eprint
 from typing import Any, Callable, Dict, Iterator, List, Set, Tuple
 from itertools import chain
@@ -128,6 +131,10 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
         output[mask > 0] = (b, g, r)
 
     data["img"] = output
+
+    if constants.DEBUG:
+        cv2.imwrite("./images/" + time.strftime("brushfire_step_%Y-%m-%d_%H-%M-%S_" + str(iteration) + ".png"), output)
+
 
     # Check for completion
     mask = np.zeros([R, C], np.uint8)

@@ -222,6 +222,16 @@ if __name__ == '__main__':
     args.add_argument("-q", "--quiet", action='store_true', required=False,
                       help="Don't show guis. Print most things to stderr instead of stdout. Only writes to stdout: CORRECT,MISSING,EXTRA,NODES,EDGES")
 
+    def check_image_output(path: str):
+        if path is None:
+            return None
+        # Attempt to write an image to that location
+        cv2.imwrite(path, np.zeros((1, 1, 3), np.uint8))
+        return path
+
+    args.add_argument("-st", "--save-to", type=check_image_output, default=None,
+                      help="Save comparision image to the specified path. It will be deleted and over-written!")
+
     def check_test_case(arg: str):
         if arg in TEST_PARAMS:
             return TEST_PARAMS[arg]
@@ -256,6 +266,9 @@ if __name__ == '__main__':
 
     # Test Case
     PARAMS = args["test_case"]
+
+    # Save to
+    SAVE_TO = args["save_to"]
 
     # Make your own path!
     if not "input" in args or args["input"] is None:
@@ -342,6 +355,9 @@ if __name__ == '__main__':
     qout("Total: %d" % num_total)
     qout("Nodes: %d" % OUTPUT_NODES)
     qout("Edges: %d" % OUTPUT_EDGES)
+
+    if SAVE_TO:
+        cv2.imwrite(SAVE_TO, DIFFERENCE)
 
     if not QUIET:
         cv2.imshow("difference", DIFFERENCE)

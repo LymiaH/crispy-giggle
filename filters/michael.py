@@ -42,7 +42,7 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
             midpoint = (midpointX, midpointY)
             if midpoint == (nearest_inner_pixel[0][0], nearest_inner_pixel[0][1]):
                 continue
-            cv2.circle(img, midpoint, 3, [0, 0, 255], -1)
+            cv2.circle(img, midpoint, 1, [0, 0, 255], -1)
             midpoints.append(midpoint)
 
     data["midpoints"] = midpoints

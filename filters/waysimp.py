@@ -142,7 +142,7 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
             point_mask[groups == VORONOI] = 255
         elif "michael" in global_data:
             for point in global_data["michael"]["midpoints"]:
-                point_mask[point[0], point[1]] = 255
+                point_mask[point[1], point[0]] = 255
         else:
             eprint("No waypoint data present.")
 
@@ -203,7 +203,7 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
 
     # output
     #test_factor = 11
-    test_factor = 5
+    test_factor = 3
     test_offset = test_factor // 2
     line_colour = tuple(hsl_to_rgb(0.333, 1.0, 0.5))
     centre_colour = tuple(hsl_to_rgb(0.0, 0.0, 0.2))
@@ -260,6 +260,7 @@ def run(iteration: int, img: np.ndarray, data: Dict[str, Any], global_data: Dict
     data["points"] = points = new_points
 
     if constants.DEBUG:
+        #cv2.imwrite("./images/" + time.strftime("waysimp_step_%Y-%m-%d_%H-%M-%S_" + str(iteration) + ".png"), test) # TODO: Remove
         if iteration == 0:
             cv2.imwrite("./images/" + time.strftime("waysimp_test_%Y-%m-%d_%H-%M-%S_begin.png"), test)
         elif not changed:

@@ -23,13 +23,14 @@ def qprint(*args, **kwargs):
 
 
 def run_comparer(graph_path: str = "./paths/twointersect.txt", mode: str = "graph", test_case: str = "tri_simp",
-                 thickness: int = 15):
+                 thickness: int = 15, save_to: str=None):
     """
     Runs the comparer program.
     :param graph_path: Path to the graph to run experiments on
     :param mode: way/graph: way uses a DFS to generate sequential waypoints, graph produces nodes and edges
     :param test_case: no_simp/los_simp/tri_simp: Test case to use: No simplification, Line of Sight simplification, Triangle Simplification
     :param thickness: Thickness of the road (default 15)
+    :param save_to: Path to save image to, or None if no need to save
     :return: (TIME_ELAPSED, CORRECT, MISSING, EXTRA)
     """
     args = []
@@ -42,6 +43,9 @@ def run_comparer(graph_path: str = "./paths/twointersect.txt", mode: str = "grap
     args.append(test_case)
     args.append('-t')
     args.append(str(thickness))
+    if save_to:
+        args.append('-st')
+        args.append(save_to)
     for arg in PARAMS: args.append(arg)
 
     qprint("[EXPERIMENT] Running: " + ' '.join(args))
@@ -112,10 +116,16 @@ if __name__ == '__main__':
         'tri_simp',
     ]
 
-    THICKNESSES = [3, 5, 7, 9, 11, 13, 15]
+    #THICKNESSES = [3, 5, 7, 9, 11, 13, 15]
+    THICKNESSES = [15]
 
     try:
         os.makedirs(str(WORKING_DIRECTORY / 'experiments'))
+    except:
+        pass
+
+    try:
+        os.makedirs(str(WORKING_DIRECTORY / 'experiments' / 'images'))
     except:
         pass
 
@@ -130,10 +140,11 @@ if __name__ == '__main__':
             if not DRYRUN:
                 try:
                     elapsed, correct, missing, extra, nodes, edges = run_comparer(
-                        graph_path="./paths/%s.txt" % graph,
+                        graph_path=str(WORKING_DIRECTORY / 'paths' / ('%s.txt' % graph)),
                         mode=mode,
                         test_case=test_case,
                         thickness=thickness,
+                        save_to=str(WORKING_DIRECTORY / 'experiments' / 'images' / ('%d.png' % num)),
                     )
                 except:
                     traceback.print_exc()
