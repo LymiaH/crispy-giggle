@@ -231,6 +231,8 @@ if __name__ == '__main__':
 
     args.add_argument("-st", "--save-to", type=check_image_output, default=None,
                       help="Save comparision image to the specified path. It will be deleted and over-written!")
+    args.add_argument("-sr", "--save-ref", type=check_image_output, default=None,
+                      help="Save reference graph image to the specified path. It will be deleted and over-written!")
 
     def check_test_case(arg: str):
         if arg in TEST_PARAMS:
@@ -269,6 +271,7 @@ if __name__ == '__main__':
 
     # Save to
     SAVE_TO = args["save_to"]
+    SAVE_REF = args["save_ref"]
 
     # Make your own path!
     if not "input" in args or args["input"] is None:
@@ -303,6 +306,8 @@ if __name__ == '__main__':
     if LOOP.shape[0] > 0:
         cv2.polylines(img, [LOOP], True, 255, THICKNESS)
     REFERENCE = img
+    if SAVE_REF:
+        cv2.imwrite(SAVE_REF, REFERENCE)
     if not QUIET:
         cv2.imshow("reference", REFERENCE)
         cv2.waitKey(1)

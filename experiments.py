@@ -23,14 +23,15 @@ def qprint(*args, **kwargs):
 
 
 def run_comparer(graph_path: str = "./paths/twointersect.txt", mode: str = "graph", test_case: str = "tri_simp",
-                 thickness: int = 15, save_to: str=None):
+                 thickness: int = 15, save_to: str=None, save_ref: str=None):
     """
     Runs the comparer program.
     :param graph_path: Path to the graph to run experiments on
     :param mode: way/graph: way uses a DFS to generate sequential waypoints, graph produces nodes and edges
     :param test_case: no_simp/los_simp/tri_simp: Test case to use: No simplification, Line of Sight simplification, Triangle Simplification
     :param thickness: Thickness of the road (default 15)
-    :param save_to: Path to save image to, or None if no need to save
+    :param save_to: Path to save comparison image to, or None if no need to save
+    :param save_ref: Path to save reference image to, or None if no need to save
     :return: (TIME_ELAPSED, CORRECT, MISSING, EXTRA)
     """
     args = []
@@ -46,6 +47,9 @@ def run_comparer(graph_path: str = "./paths/twointersect.txt", mode: str = "grap
     if save_to:
         args.append('-st')
         args.append(save_to)
+    if save_ref:
+        args.append('-sr')
+        args.append(save_ref)
     for arg in PARAMS: args.append(arg)
 
     qprint("[EXPERIMENT] Running: " + ' '.join(args))
@@ -100,7 +104,7 @@ if __name__ == '__main__':
         'infinity',
         'candy',
         'triforce',
-        'square_in_square',
+        'quadforce',
         'chaotic',
         'plus',
     ]
@@ -139,12 +143,15 @@ if __name__ == '__main__':
             elapsed, correct, missing, extra, nodes, edges = -1, -1, -1, -1, -1, -1
             if not DRYRUN:
                 try:
+                    compare_file_name = '%s_%s_%s_%d.png' % (graph, mode, test_case, thickness)
                     elapsed, correct, missing, extra, nodes, edges = run_comparer(
                         graph_path=str(WORKING_DIRECTORY / 'paths' / ('%s.txt' % graph)),
                         mode=mode,
                         test_case=test_case,
                         thickness=thickness,
-                        save_to=str(WORKING_DIRECTORY / 'experiments' / 'images' / ('%d.png' % num)),
+                        save_to=str(WORKING_DIRECTORY / 'experiments' / 'images' / compare_file_name),
+                        save_ref=None,
+                        #save_ref=str(WORKING_DIRECTORY / 'paths' / ('%s.png' % graph)) if thickness == 15 else None,
                     )
                 except:
                     traceback.print_exc()
